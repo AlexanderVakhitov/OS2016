@@ -6,5 +6,5 @@
 
 Пример запуска программы:
 ```bash
-gzip -cd test.gz | ./exc2 -u test
+gzip -cd test.gz | ./exc3 -u test
 ```
