@@ -59,8 +59,9 @@ void change_password(char *filename,char *username,
 	}
 
 	if (new_user == 0) {
-		strcpy(users_list[users_count-1].username, username);
-		strcpy(users_list[users_count-1].password, password);
+		strcpy(users_list[users_count].username, username);
+		strcpy(users_list[users_count].password, password);
+		++users_count;
 	}
 
 	print_status(filename, "WRITE");
