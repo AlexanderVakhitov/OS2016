@@ -9,12 +9,7 @@
 
 #define MAX_SIZE 1000
 
-struct handler {
-	int read;
-	int write;
-};
-
-struct handler pipes[MAX_SIZE];
+int pipes[MAX_SIZE];
 
 int amount;
 long long numbers[MAX_SIZE];
@@ -22,7 +17,7 @@ long long numbers[MAX_SIZE];
 void print_result() {
 	int i, result, overall = 0;
 	for (i = 0; i < amount; ++i) {
-		FILE * fd = fdopen(pipes[i].read, "r");
+		FILE * fd = fdopen(pipes[i], "r");
 		fscanf(fd, "%d", &result);
 		fclose(fd);
 		overall += result;
@@ -43,13 +38,13 @@ int isPrime(long long number) {
 	return 1;
 }
 
-void parallel_execute(struct handler p) {
+void parallel_execute(int read, int write) {
 	fd_set fds;
 	struct timeval tv;
 	int retval;
 
 	FD_ZERO(&fds);
-	FD_SET(p.read, &fds);
+	FD_SET(read, &fds);
 
 	tv.tv_sec = 5;
 	tv.tv_usec = 0;
@@ -62,7 +57,7 @@ void parallel_execute(struct handler p) {
 
 	FILE * fd;
 	long long number;
-	fd = fdopen(p.read, "r");
+	fd = fdopen(read, "r");
 	fscanf(fd, "%lld", &number);
 	fclose(fd);
 
@@ -70,7 +65,7 @@ void parallel_execute(struct handler p) {
 	result = isPrime(number);
 
 	FD_ZERO(&fds);
-	FD_SET(p.write, &fds);
+	FD_SET(write, &fds);
 
 	retval = select(4000, NULL, &fds, NULL, &tv);
 	if (retval == -1) {
@@ -78,7 +73,7 @@ void parallel_execute(struct handler p) {
 		exit(2);
 	}
 
-	fd = fdopen(p.write, "w");
+	fd = fdopen(write, "w");
 	fprintf(fd, "%d\n", result);
 	fclose(fd);
 }
@@ -93,19 +88,15 @@ void fork_to_execute(int index, long long number) {
 		exit(1);
 	}
 
-	struct handler pipe;
-	pipe.read = fd[0];
-	pipe.write = fd[1];
-
 	if(childpid == 0) {
-		parallel_execute(pipe);
+		parallel_execute(fd[0], fd[1]);
 		exit(0);
 	} else {
-		FILE *fd = fdopen(pipe.write, "w");
-		fprintf(fd, "%lld\n", number);
-		fclose(fd);
+		FILE *fp = fdopen(fd[1], "w");
+		fprintf(fp, "%lld\n", number);
+		fclose(fp);
 
-		pipes[index] = pipe;
+		pipes[index] = fd[0];
 	}
 }
 
