@@ -33,3 +33,6 @@
 
 # Directories
 .idea
+
+# Usage
+.DS_Store
